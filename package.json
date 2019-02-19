@@ -23,8 +23,13 @@
         "gh-pages": "gh-pages -d build"
     },
     "dependencies": {
+        "@fortawesome/fontawesome-svg-core": "^1.2.15",
+        "@fortawesome/free-solid-svg-icons": "^5.7.2",
+        "@fortawesome/react-fontawesome": "^0.1.4",
         "classnames": "2.2.6",
+        "i": "^0.3.6",
         "moment": "2.23.0",
+        "npm": "^6.8.0",
         "react": "16.7.0",
         "react-dom": "16.7.0",
         "react-flip-move": "3.0.3",

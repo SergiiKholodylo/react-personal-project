@@ -3,68 +3,33 @@ import React, { Component } from 'react';
 import Header from 'components/Header';
 import Footer from 'components/Footer';
 import Task from 'components/Task';
+import { sortTasksByGroup } from '../../instruments/helpers';
 
 // Instruments
 import Styles from './styles.m.css';
-import { api, MAIN_URL, TOKEN } from '../../REST'; // ! Импорт модуля API должен иметь именно такой вид (import { api } from '../../REST')
+import { api } from '../../REST'; // ! Импорт модуля API должен иметь именно такой вид (import { api } from '../../REST')
+import Spinner from '../Spinner';
 
 export default class Scheduler extends Component {
     state = {
         searchString: '',
         tasks:        [],
         isLoading:    false,
-        newTaskName:  'Create a new task stub)',
+        newTaskName:  '',
     }
 
-    componentDidMount() { 
+    componentDidMount () {
         this._fetchTasks();
     }
 
-    _fetchTasks = async () => {
-        this._setIsLoadingState(true);
+    _updateTasksFilter = () => {
 
-        const response = await fetch(MAIN_URL, {
-            method:  'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization:  TOKEN,
-            },
-        });
-
-        const { data: tasks } = await response.json();
-        
-        console.log(tasks);
-
-        this.setState({
-            tasks,
-            isLoading: false,
-        });
     }
 
     _setIsLoadingState = (state) => {
         this.setState({
             isLoading: state,
         });
-    }
-
-    _createTask = async (message) => {
-        this._setIsLoadingState(true);
-        console.log('Creating task');
-        const response = await fetch(MAIN_URL, {
-            method:  'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization:  TOKEN,
-            },
-            body: JSON.stringify({ message }),
-        });
-
-        const { data: task } = await response.json();
-
-        this.setState(({ tasks }) => ({
-            tasks:     [task, ...tasks],
-            isLoading: false,
-        }));
     }
 
     _handleFormSubmit = (event) => {
@@ -93,17 +58,108 @@ export default class Scheduler extends Component {
         }
     }
 
+    _isEmptyOrSpaces = (str) => {
+        return str === null || str.match(/^ *$/) !== null;
+    }
+
+    _updateSearchString = (event) => {
+        this.setState({
+            searchString: event.target.value,
+        });
+    }
+
+    _newTaskNameChange= (event) => {
+        this.setState({
+            newTaskName: event.target.value,
+        });
+    }
+
+    _toggleCheckbox = (event) => {
+        const target = event.target;
+        const value = target.type === 'checkbox' ? target.checked : target.value;
+        const name = target.name;
+
+        this.setState({
+            [name]: value,
+        });
+    };
+
+
+
+
+
+
+
+    // CRUD Opps
+
+    _fetchTasks = async () => {
+        this._setIsLoadingState(true);
+
+        const tasks = sortTasksByGroup(await api.fetchTasks());
+
+        this.setState({
+            tasks,
+            isLoading: false,
+        });
+    }    
+
+    _updateTask = async (task) => {
+
+        this._setIsLoadingState(true);
+        const updatedTask = await api.updateTask([task]);
+
+        this.setState(({ tasks }) => ({
+            tasks:     sortTasksByGroup([...updatedTask, ...tasks.filter((taskInt) => taskInt.id !== task.id)]),
+            isLoading: false,
+        }));
+    }
+
+    _removeTask = async (id) => {
+        this._setIsLoadingState(true);
+
+        await api.removeTask(id);
+
+        this.setState(({ tasks }) => ({
+            tasks:     tasks.filter((task) => task.id !== id),
+            isLoading: false,
+        }));
+
+    }
+
+    _createTask = async (message) => {
+        this._setIsLoadingState(true);
+        const task = await api.createTask(message);
+
+        this.setState(({ tasks }) => ({
+            tasks:     sortTasksByGroup([task, ...tasks]),
+            isLoading: false,
+        }));
+    }
+
+    _finishTask = async (id) => {
+        try {
+            await this.state.tasks.filter((task) => task.id === id).map(async (task) => {
+                task.completed = !task.completed;
+                await this._updateTask(task);
+            });
+        } catch (exception) {
+            console.log(exception);
+        }
+    };
+
     render () {
         const { isLoading, searchString, tasks, newTaskName } = this.state;
 
-        const tasksJSX = tasks.map((task) => {
+        const tasksJSX = (this._isEmptyOrSpaces(searchString) ? tasks : tasks.filter((task) => task.message.includes(searchString))).map((task) => {
 
             return (
                 <Task
                     key = { task.id }
                     { ...task }
-                    _likePost = { this._likePost }
-                    _removePost = { this._removePost }
+                    _finishTask = { this._finishTask }
+                    _removeTask = { this._removeTask }
+                    _toggleCheckbox = { this._toggleCheckbox }
+                    _updateTask = { this._updateTask }
                 />
             );
         });
@@ -111,10 +167,20 @@ export default class Scheduler extends Component {
         return (
             <section className = { Styles.scheduler }>
                 <main>
-                    <Header />
+                    <Spinner isSpinning = { isLoading } />
+                    <Header
+                        value = { searchString }
+                        onChange = { this._updateSearchString }
+                    />
                     <section >
                         <form onSubmit = { this._handleFormSubmit }>
-                            <input maxLength = '50' placeholder = 'Описaние моей новой задачи' type = 'text' />
+                            <input
+                                maxLength = '50'
+                                placeholder = 'Описaние моей новой задачи'
+                                type = 'text'
+                                value = { newTaskName }
+                                onChange = { this._newTaskNameChange }
+                            />
                             <button>Добавить задачу</button>
                         </form>
                         <ul>
