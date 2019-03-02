@@ -46,6 +46,30 @@ export default class Task extends PureComponent {
         message,
     });
 
+    _updateNewTaskMessage = () => {
+        
+    }
+
+    _updateTaskMessageOnClick = () => {
+
+    }
+
+    _toggleTaskCompletedState = () => {
+
+    }
+
+    _toggleTaskFavoriteState = () => {
+        
+    }
+
+    _cancelUpdatingTaskMessage = () => {
+        
+    }
+
+    _updateTaskMessageOnKeyDown = () => {
+        
+    }
+
     _updateTaskContent = (event) => {
 
         const task = { ...this.state.task };
@@ -54,13 +78,23 @@ export default class Task extends PureComponent {
         this.setState({ task });
     }
 
-    _finishTask = async (event) => {
+    _finishTask = async () => {
         const task = { ...this.state.task };
         const { _updateTask } = this.props;
 
         task.completed = !task.completed;
         this.setState({ task });
-        console.log(task);
+
+        await _updateTask(task);
+    }
+
+    _toggleFavoriteTask = async () => {
+        const task = { ...this.state.task };
+        const { _updateTask } = this.props;
+
+        task.favorite = !task.favorite;
+        this.setState({ task });
+
         await _updateTask(task);
     }
 
@@ -83,7 +117,7 @@ export default class Task extends PureComponent {
 
     }
 
-    _onEraserIconClick = () => {
+    _removeTask = () => {
         const {
             id,
             _removeTask,
@@ -128,13 +162,13 @@ export default class Task extends PureComponent {
             </div>
             <div className = { Styles.actions } >
                 <div className = { Styles.toggleTaskFavoriteState } style = { divStyle } >
-                    <Star inlineBlock color1 = '#3B8EF3' color2 = '#000'/>
+                    <Star inlineBlock checked = {task.favorite } color1 = '#3B8EF3' color2 = '#000' onClick = { this._toggleFavoriteTask }/>
                 </div>
                 <div className = { Styles.updateTaskMessageOnClick } style = { divStyle }>
-                    <Edit inlineBlock color1 = '#3B8EF3' color2 = '#000' onClick = { this._setTaskEditingState } /> 
+                    <Edit inlineBlock checked = { isEditing } color1 = '#3B8EF3' color2 = '#000' onClick = { this._setTaskEditingState }/>
                 </div>
                 <div style = { divStyle }>
-                    <Remove inlineBlock color1 = '#3B8EF3' color2 = '#000' onClick = { this._onEraserIconClick } />
+                    <Remove inlineBlock color1 = '#3B8EF3' color2 = '#000' onClick = { this._removeTask } />
                 </div>
                 
             </div>
@@ -143,11 +177,15 @@ export default class Task extends PureComponent {
 }
 
 Task.defaultProps = {
-    message: '',
-    id:      '',
+    message:   '',
+    id:        '',
+    completed: false,
+    favorite:  false,
 };
 
 Task.propTypes = {
-    id:      PropTypes.string,
-    message: PropTypes.string,
+    completed: PropTypes.bool,
+    favorite:  PropTypes.bool,
+    id:        PropTypes.string,
+    message:   PropTypes.string,
 };

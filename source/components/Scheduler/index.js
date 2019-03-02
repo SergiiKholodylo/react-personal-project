@@ -3,6 +3,8 @@ import React, { Component } from 'react';
 import Header from 'components/Header';
 import Footer from 'components/Footer';
 import Task from 'components/Task';
+import Checkbox from 'theme/assets/Checkbox';
+
 import { sortTasksByGroup } from '../../instruments/helpers';
 
 // Instruments
@@ -84,13 +86,7 @@ export default class Scheduler extends Component {
         });
     };
 
-
-
-
-
-
-
-    // CRUD Opps
+    // CRUD Operations
 
     _fetchTasks = async () => {
         this._setIsLoadingState(true);
@@ -101,7 +97,7 @@ export default class Scheduler extends Component {
             tasks,
             isLoading: false,
         });
-    }    
+    }
 
     _updateTask = async (task) => {
 
@@ -147,10 +143,32 @@ export default class Scheduler extends Component {
         }
     };
 
+    _finishAllTask = async () => {
+        const { tasks } = this.state;
+
+        this._setIsLoadingState(true);
+
+        try {
+            await api.completeAllTasks(tasks);
+
+            this.setState({
+                tasks,
+                isLoading: false,
+            });
+        } catch (exception) {
+            console.log(exception);
+        }
+    };
+
     render () {
         const { isLoading, searchString, tasks, newTaskName } = this.state;
 
+        let allTasksDone = true;
+
         const tasksJSX = (this._isEmptyOrSpaces(searchString) ? tasks : tasks.filter((task) => task.message.includes(searchString))).map((task) => {
+            if (!task.completed) {
+                allTasksDone = false;
+            }
 
             return (
                 <Task
@@ -189,7 +207,10 @@ export default class Scheduler extends Component {
                             </div>
                         </ul>
                     </section>
-                    <Footer />
+                    <Footer>
+                        <Checkbox checked = { allTasksDone } color1 = '#000' color2 = '#FFF' onClick = { this._finishAllTask } />
+                        <span className = { Styles.completeAllTasks }>Все задачи выполнены</span>
+                    </Footer>
                 </main>
             </section>
         );

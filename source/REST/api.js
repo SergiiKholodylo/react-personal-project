@@ -2,73 +2,88 @@ import { MAIN_URL, TOKEN } from './config';
 
 export const api = {
 
-    createTask: async (message) => {
-        const response = await fetch(MAIN_URL, {
-            method:  'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization:  TOKEN,
-            },
-            body: JSON.stringify({ message }),
-        });
-
-        const { data: task } = await response.json();
-
-        return task;
-    },
-
-    fetchTasks: async () => {
-        // console.log('fetchTasks');
-        const response = await fetch(MAIN_URL, {
-            method:  'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization:  TOKEN,
-            },
-        });
-
-        const { data: tasks } = await response.json();
-
-        return tasks;
+    error: (value) => {
+        if (console) {
+            console.error(value);
+        }
     },
 
     updateTask: async (task) => {
-        // console.log('API request', JSON.stringify(task));
-        const response = await fetch(MAIN_URL, {
-            method:  'PUT',
-            headers: {
-                Authorization:  TOKEN,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(task),
-        });
+        try {
+            const response = await fetch(MAIN_URL, {
+                method:  'PUT',
+                headers: {
+                    Authorization:  TOKEN,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(task),
+            });
 
-        const { data: newTasks } = await response.json();
+            const { data: newTasks } = await response.json();
 
-        // console.log('API response', newTasks);
+            return newTasks;
+        } catch (err) {
+            this.error(err);
+        }
+    },
 
-        return newTasks;
+    createTask: async (message) => {
+        try {
+            const response = await fetch(MAIN_URL, {
+                method:  'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization:  TOKEN,
+                },
+                body: JSON.stringify({ message }),
+            });
+
+            const { data: task } = await response.json();
+
+            return task;
+        } catch (err) {
+            this.error(err);
+        }
+    },
+
+    fetchTasks: async () => {
+        try {
+            const response = await fetch(MAIN_URL, {
+                method:  'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization:  TOKEN,
+                },
+            });
+
+            const { data: tasks } = await response.json();
+
+            return tasks;
+        } catch (err) {
+            this.error(err);
+        }
     },
 
     removeTask: async (id) => {
-
-        await fetch(`${MAIN_URL}/${id}`, {
-            method:  'DELETE',
-            headers: {
-                Authorization: TOKEN,
-            },
-        });
+        try {
+            await fetch(`${MAIN_URL}/${id}`, {
+                method:  'DELETE',
+                headers: {
+                    Authorization: TOKEN,
+                },
+            });
+        } catch (err) {
+            this.error(err);
+        }
     },
 
     completeAllTasks: async (tasks) => {
 
-        const completedTasks = tasks.map((task) => {
+        await Promise.all(tasks.map((task) => {
             task.completed = true;
-
-            return task;
-        });
-
-        await this.updateTask(completedTasks);
+            
+            return api.updateTask([task]);
+        }));
     },
 
 };
