@@ -79,11 +79,13 @@ export const api = {
 
     completeAllTasks: async (tasks) => {
 
-        await Promise.all(tasks.map((task) => {
+        const ts = await Promise.all(tasks.map((task) => {
             task.completed = true;
             
             return api.updateTask([task]);
         }));
+
+        return ts.concat.apply([], ts);
     },
 
 };

@@ -9,7 +9,7 @@ import { sortTasksByGroup } from '../../instruments/helpers';
 
 // Instruments
 import Styles from './styles.m.css';
-import { api } from '../../REST'; // ! Импорт модуля API должен иметь именно такой вид (import { api } from '../../REST')
+import { api } from '../../REST';
 import Spinner from '../Spinner';
 
 export default class Scheduler extends Component {
@@ -149,14 +149,13 @@ export default class Scheduler extends Component {
         this._setIsLoadingState(true);
 
         try {
-            await api.completeAllTasks(tasks);
+            const newTasks = await api.completeAllTasks(tasks);
 
             this.setState({
-                tasks,
+                tasks:     newTasks,
                 isLoading: false,
             });
         } catch (exception) {
-            console.log(exception);
         }
     };
 

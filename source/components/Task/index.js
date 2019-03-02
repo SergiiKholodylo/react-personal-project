@@ -11,35 +11,43 @@ import Styles from './styles.m.css';
 
 export default class Task extends PureComponent {
 
+    constructor (props) {
+        super(props);
+
+        this.textInput = null;
+
+        this.setTextInputRef = (element) => {
+            this.textInput = element;
+        };
+
+        this.focusTextInput = () => {
+            // Focus the text input using the raw DOM API
+            
+            if (this.textInput) {
+                console.log('focusTextInput', this.textInput);
+                this.textInput.focus();
+                this.textInput.select();
+            }
+        };
+    }
+
     state = {
-        task: {
-            completed: false,
-            message:   '',
-        },
         isEditing: false,
+        message:   "",
     }
 
     componentDidMount = () => {
-        // console.log(this.props);
-
-        const task = this._getTaskShape(
-            this.props.id,
-            this.props.completed,
-            this.props.favorite,
-            this.props.message,
-        );
-
         this.setState({
-            task,
+            message: this.props.message,
         });
     }
 
-    _getTaskShape = ({
+    _getTaskShape = (
         id = this.props.id,
         completed = this.props.completed,
         favorite = this.props.favorite,
         message = this.props.message,
-    }) => ({
+    ) => ({
         id,
         completed,
         favorite,
@@ -47,7 +55,7 @@ export default class Task extends PureComponent {
     });
 
     _updateNewTaskMessage = () => {
-        
+
     }
 
     _updateTaskMessageOnClick = () => {
@@ -59,27 +67,25 @@ export default class Task extends PureComponent {
     }
 
     _toggleTaskFavoriteState = () => {
-        
+
     }
 
     _cancelUpdatingTaskMessage = () => {
-        
+
     }
 
     _updateTaskMessageOnKeyDown = () => {
-        
+
     }
 
     _updateTaskContent = (event) => {
-
-        const task = { ...this.state.task };
-
-        task.message = event.target.value;
-        this.setState({ task });
+        this.setState({
+            message: event.target.value,
+        });
     }
 
     _finishTask = async () => {
-        const task = { ...this.state.task };
+        const task = this._getTaskShape();
         const { _updateTask } = this.props;
 
         task.completed = !task.completed;
@@ -89,7 +95,7 @@ export default class Task extends PureComponent {
     }
 
     _toggleFavoriteTask = async () => {
-        const task = { ...this.state.task };
+        const task = this._getTaskShape();
         const { _updateTask } = this.props;
 
         task.favorite = !task.favorite;
@@ -100,21 +106,26 @@ export default class Task extends PureComponent {
 
     _updateTask = async () => {
         const { _updateTask } = this.props;
-        const { task } = this.state;
+        const task = this._getTaskShape();
 
         await _updateTask(task);
     }
 
-    _setTaskEditingState = async () => {
-        // console.log('isEditing', this.state.isEditing);
+    _setTaskEditingState = async (event) => {
+        
+        console.log('Ref', this.textInput);
+        
         if (this.state.isEditing) {
             await this._updateTask();
+        } else {
+            
         }
 
         this.setState({
             isEditing: !this.state.isEditing,
         });
-
+        //event.preventDefault();
+        this.focusTextInput();
     }
 
     _removeTask = () => {
@@ -133,11 +144,15 @@ export default class Task extends PureComponent {
         }
     }
 
+    _onFocus = () => {
+        console.log('onFocus');
+}
+
     render () {
 
         const {
             isEditing,
-            task,
+            message,
         } = this.state;
 
         const divStyle = {
@@ -146,31 +161,38 @@ export default class Task extends PureComponent {
             display: 'inline-block',
         };
 
+        console.log('Render', this.props.id);
+
+        const task = this._getTaskShape();
+
         return (<li className = { Styles.task }>
             <div className = { Styles.content }>
                 <div className = { Styles.toggleTaskCompletedState }>
                     <Checkbox checked = { task.completed } color1 = '#3B8EF3' color2 = '#FFF' onClick = { this._finishTask } />
                 </div>
                 <input
+                    autoFocus
                     disabled = { !isEditing }
                     maxLength = '50'
+                    ref = { this.setTextInputRef }
                     type = 'text'
-                    value = { task.message }
+                    value = { message }
                     onChange = { this._updateTaskContent }
+                    onFocus = { this._onFocus }
                     onKeyPress = { this._submitOnEnter }
                 />
             </div>
             <div className = { Styles.actions } >
                 <div className = { Styles.toggleTaskFavoriteState } style = { divStyle } >
-                    <Star inlineBlock checked = {task.favorite } color1 = '#3B8EF3' color2 = '#000' onClick = { this._toggleFavoriteTask }/>
+                    <Star inlineBlock checked = { task.favorite } color1 = '#3B8EF3' color2 = '#000' onClick = { this._toggleFavoriteTask } />
                 </div>
                 <div className = { Styles.updateTaskMessageOnClick } style = { divStyle }>
-                    <Edit inlineBlock checked = { isEditing } color1 = '#3B8EF3' color2 = '#000' onClick = { this._setTaskEditingState }/>
+                    <Edit inlineBlock checked = { isEditing } color1 = '#3B8EF3' color2 = '#000' onClick = { this._setTaskEditingState } />
                 </div>
                 <div style = { divStyle }>
                     <Remove inlineBlock color1 = '#3B8EF3' color2 = '#000' onClick = { this._removeTask } />
                 </div>
-                
+
             </div>
         </li>);
     }
