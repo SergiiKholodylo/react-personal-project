@@ -85,7 +85,7 @@ export const api = {
             return api.updateTask([task]);
         }));
 
-        return ts.concat.apply([], ts);
+        //return ts.concat.apply([], ts);
     },
 
 };

@@ -86,6 +86,14 @@ export default class Scheduler extends Component {
         });
     };
 
+    _getActiveTasks = () => {
+        const { searchString, tasks } = this.state;
+
+        return this._isEmptyOrSpaces(searchString)
+            ? tasks : tasks.filter((task) => task.message.includes(searchString));
+
+    }
+
     // CRUD Operations
 
     _fetchTasks = async () => {
@@ -99,7 +107,7 @@ export default class Scheduler extends Component {
         });
     }
 
-    _updateTask = async (task) => {
+    _updateTaskAsync = async (task) => {
 
         this._setIsLoadingState(true);
         const updatedTask = await api.updateTask([task]);
@@ -110,7 +118,7 @@ export default class Scheduler extends Component {
         }));
     }
 
-    _removeTask = async (id) => {
+    _removeTaskAsync = async (id) => {
         this._setIsLoadingState(true);
 
         await api.removeTask(id);
@@ -145,14 +153,19 @@ export default class Scheduler extends Component {
 
     _finishAllTask = async () => {
         const { tasks } = this.state;
+        const selectedTasks = this._getActiveTasks();
 
         this._setIsLoadingState(true);
 
         try {
-            const newTasks = await api.completeAllTasks(tasks);
+            const newTasks = await api.completeAllTasks(selectedTasks);
+
+            const restTasks = tasks.filter((task) => !newTasks.some((resTask) => {
+                return resTask.id === task.id;
+            }));
 
             this.setState({
-                tasks:     newTasks,
+                tasks:     [...restTasks, ...newTasks],
                 isLoading: false,
             });
         } catch (exception) {
@@ -160,11 +173,11 @@ export default class Scheduler extends Component {
     };
 
     render () {
-        const { isLoading, searchString, tasks, newTaskName } = this.state;
+        const { isLoading, searchString, newTaskName } = this.state;
 
         let allTasksDone = true;
 
-        const tasksJSX = (this._isEmptyOrSpaces(searchString) ? tasks : tasks.filter((task) => task.message.includes(searchString))).map((task) => {
+        const tasksJSX = this._getActiveTasks().map((task) => {
             if (!task.completed) {
                 allTasksDone = false;
             }
@@ -173,10 +186,8 @@ export default class Scheduler extends Component {
                 <Task
                     key = { task.id }
                     { ...task }
-                    _finishTask = { this._finishTask }
-                    _removeTask = { this._removeTask }
-                    _toggleCheckbox = { this._toggleCheckbox }
-                    _updateTask = { this._updateTask }
+                    _removeTaskAsync = { this._removeTaskAsync }
+                    _updateTaskAsync = { this._updateTaskAsync }
                 />
             );
         });
