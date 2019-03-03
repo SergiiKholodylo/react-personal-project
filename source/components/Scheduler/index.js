@@ -24,10 +24,6 @@ export default class Scheduler extends Component {
         this._fetchTasks();
     }
 
-    _updateTasksFilter = () => {
-
-    }
-
     _setIsLoadingState = (state) => {
         this.setState({
             isLoading: state,
@@ -51,15 +47,6 @@ export default class Scheduler extends Component {
         });
     }
 
-    _submitOnEnter = (event) => {
-        const enterKey = event.key === 'Enter';
-
-        if (enterKey) {
-            event.preventDefault();
-            this._submitTask();
-        }
-    }
-
     _isEmptyOrSpaces = (str) => {
         return str === null || str.match(/^ *$/) !== null;
     }
@@ -75,16 +62,6 @@ export default class Scheduler extends Component {
             newTaskName: event.target.value,
         });
     }
-
-    _toggleCheckbox = (event) => {
-        const target = event.target;
-        const value = target.type === 'checkbox' ? target.checked : target.value;
-        const name = target.name;
-
-        this.setState({
-            [name]: value,
-        });
-    };
 
     _getActiveTasks = () => {
         const { searchString, tasks } = this.state;
@@ -139,37 +116,16 @@ export default class Scheduler extends Component {
             isLoading: false,
         }));
     }
-
-    _finishTask = async (id) => {
-        try {
-            await this.state.tasks.filter((task) => task.id === id).map(async (task) => {
-                task.completed = !task.completed;
-                await this._updateTask(task);
-            });
-        } catch (exception) {
-            console.log(exception);
-        }
-    };
+;
 
     _finishAllTask = async () => {
-        const { tasks } = this.state;
         const selectedTasks = this._getActiveTasks();
 
         this._setIsLoadingState(true);
 
-        try {
-            const newTasks = await api.completeAllTasks(selectedTasks);
+        await api.completeAllTasks(selectedTasks);
 
-            const restTasks = tasks.filter((task) => !newTasks.some((resTask) => {
-                return resTask.id === task.id;
-            }));
-
-            this.setState({
-                tasks:     [...restTasks, ...newTasks],
-                isLoading: false,
-            });
-        } catch (exception) {
-        }
+        this._setIsLoadingState(false);
     };
 
     render () {

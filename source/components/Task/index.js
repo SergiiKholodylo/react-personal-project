@@ -13,8 +13,6 @@ export default class Task extends PureComponent {
 
     constructor (props) {
         super(props);
-
-        console.log('Props', props);
         this.taskInput = React.createRef();
 
         this.setTextInputRef = (element) => {
@@ -50,18 +48,13 @@ export default class Task extends PureComponent {
         favorite,
         message,
     })
-    
 
     //based on tests
     _setTaskEditingState = (mode) => {
-        console.log('_setTaskEditingState', mode,this.taskInput);
+
         this.setState({
             isTaskEditing: mode,
         });
-        this.taskInput.current.focus();
-        if (mode) {
-            this.taskInput.current.focus();
-        }
     }
 
     _taskInputFocus = () => {
@@ -81,18 +74,19 @@ export default class Task extends PureComponent {
     _updateTaskMessageOnClick = () => {
         if (this.state.isTaskEditing) {
             this._updateTask();
-        } else {
-            this._setTaskEditingState(true);
-        }
 
+            return null;
+        }
+        this._setTaskEditingState(true);
     }
 
     //based on tests
     _toggleTaskCompletedState = async () => {
-        const task = this._getTaskShape(this.props);
+        const task = this._getTaskShape({
+            completed: !this.props.completed,
+        });
         const { _updateTaskAsync } = this.props;
 
-        task.completed = !task.completed;
         const updatedTask = await _updateTaskAsync(task);
 
         this.setState({ updatedTask });
@@ -100,10 +94,11 @@ export default class Task extends PureComponent {
 
     //based on tests
     _toggleTaskFavoriteState = async () => {
-        const task = this._getTaskShape(this.props);
+        const task = this._getTaskShape({
+            favorite: !this.props.favorite,
+        });
         const { _updateTaskAsync } = this.props;
 
-        task.favorite = !task.favorite;
         const updatedTask = await _updateTaskAsync(task);
 
         this.setState({ updatedTask });
@@ -123,9 +118,10 @@ export default class Task extends PureComponent {
         const task = this._getTaskShape(this.props);
 
         this._setTaskEditingState(false);
-        if (this.state.newMessage !== this.props.message) {
-            _updateTaskAsync(task);
+        if (this.state.newMessage === this.props.message) {
+            return null;
         }
+        _updateTaskAsync(task);
     }
 
     _removeTask = () => {
@@ -139,18 +135,17 @@ export default class Task extends PureComponent {
 
     //based on tests
     _updateTaskMessageOnKeyDown = (event) => {
-
-        if (!this.state.newMessage) {
-            return;
+        if (this.state.newMessage === '') {
+            return null;
         }
 
         if (event.key === 'Enter') {
             this._updateTask();
-            event.preventDefault();
+
+            return null;
         }
-        if (event.key === 'Esc') {
+        if (event.key === 'Escape') {
             this._cancelUpdatingTaskMessage();
-            event.preventDefault();
         }
     }
 
@@ -186,15 +181,17 @@ export default class Task extends PureComponent {
 }
 
 Task.defaultProps = {
-    message:   '1',
-    id:        '1',
-    completed: false,
-    favorite:  false,
+    message:          'The new message',
+    id:               '1',
+    completed:        false,
+    favorite:         false,
+    _remoteTaskAsync: () => { },
+    _updateTaskAsync: () => { },
 };
 
 Task.propTypes = {
-    // _remoteTaskAsync: PropTypes.func.isRequired,
-    // _updateTaskAsync: PropTypes.func.isRequired,
+    _remoteTaskAsync: PropTypes.func.isRequired,
+    _updateTaskAsync: PropTypes.func.isRequired,
     completed:        PropTypes.bool.isRequired,
     favorite:         PropTypes.bool.isRequired,
     id:               PropTypes.string.isRequired,
