@@ -1,7 +1,7 @@
 // Core
 import React, { Component } from 'react';
 import { createPortal } from 'react-dom';
-import {bool} from 'prop-types';
+import { bool } from 'prop-types';
 
 // Instruments
 import Styles from './styles.m.css';

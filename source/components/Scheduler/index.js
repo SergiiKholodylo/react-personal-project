@@ -76,10 +76,8 @@ export default class Scheduler extends Component {
     _fetchTasks = async () => {
         this._setIsLoadingState(true);
 
-        const tasks = sortTasksByGroup(await api.fetchTasks());
-
         this.setState({
-            tasks,
+            tasks:     sortTasksByGroup(await api.fetchTasks()),
             isLoading: false,
         });
     }
@@ -125,7 +123,10 @@ export default class Scheduler extends Component {
 
         await api.completeAllTasks(selectedTasks);
 
-        this._setIsLoadingState(false);
+        this.setState(({ tasks }) => ({
+            tasks:     sortTasksByGroup(tasks),
+            isLoading: false,
+        }));
     };
 
     render () {
